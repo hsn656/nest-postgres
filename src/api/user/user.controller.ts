@@ -3,34 +3,49 @@ import {
   Controller,
   Get,
   Inject,
-  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { GetProfileSchema } from 'src/swagger/GetProfileSchema';
+import { UnauthorizedErrorSchema } from 'src/swagger/UnauthorizedErrorSchema';
+import { UpdateUserSchema } from 'src/swagger/UpdateUserSchema';
+import { CreateUserDto, UpdateUserDto, UserDto } from './user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
-@Controller('user')
+@Controller('account')
+@Serialize(UserDto)
 export class UserController {
   @Inject(UserService)
   private readonly service: UserService;
 
-  @Post()
+  @ApiResponse(GetProfileSchema)
+  @ApiTags('auth')
+  @Post('signup')
   public createUser(@Body() body: CreateUserDto): Promise<User> {
     return this.service.createUser(body);
   }
 
+  @ApiBearerAuth()
+  @ApiTags('profile')
+  @ApiResponse(GetProfileSchema)
+  @ApiResponse(UnauthorizedErrorSchema)
   @UseGuards(AuthGuard('jwt'))
-  @Get('profile')
+  @Get('get-profile-data')
   public getProfile(@Request() req): Promise<User> {
     return this.service.getUser(req.user.username);
   }
 
+  @ApiBearerAuth()
+  @ApiTags('profile')
+  @ApiResponse(UpdateUserSchema)
+  @ApiResponse(UnauthorizedErrorSchema)
   @UseGuards(AuthGuard('jwt'))
-  @Patch('profile')
+  @Post('update-profile-info')
   public updateProfile(
     @Request() req,
     @Body() body: UpdateUserDto,

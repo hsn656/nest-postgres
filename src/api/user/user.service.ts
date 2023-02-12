@@ -23,10 +23,7 @@ export class UserService {
     return this.repository.save(user);
   }
 
-  public async updateUser(
-    userId: number,
-    body: UpdateUserDto,
-  ): Promise<string> {
+  public async updateUser(userId: number, body: UpdateUserDto): Promise<any> {
     await this.repository.update(
       {
         id: userId,
@@ -36,6 +33,8 @@ export class UserService {
       },
     );
 
-    return 'success';
+    return {
+      message: 'success',
+    };
   }
 }
